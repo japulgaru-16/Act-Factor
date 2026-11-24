@@ -1,0 +1,1754 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Factorización Interactiva: De lo Directo a lo Encadenado</title>
+
+  <!-- Google Fonts: Plus Jakarta Sans, Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['"Plus Jakarta Sans"', 'sans-serif'],
+            sans: ['"Inter"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            warmbg: '#FFFDF9',
+            indigoPop: '#6366F1',
+            violetPop: '#7C3AED',
+            emeraldPop: '#10B981',
+            cyanPop: '#06B6D4',
+            magentaPop: '#EC4899',
+            fuchsiaPop: '#DB2777',
+            amberPop: '#F59E0B',
+            orangePop: '#F97316',
+            coralPop: '#F43F5E',
+          },
+          boxShadow: {
+            'card-indigo': '0 10px 28px -6px rgba(99, 102, 241, 0.14), 0 4px 10px -4px rgba(124, 58, 237, 0.08)',
+            'card-emerald': '0 10px 26px -6px rgba(16, 185, 129, 0.14), 0 4px 10px -4px rgba(6, 182, 212, 0.08)',
+            'card-magenta': '0 10px 26px -6px rgba(236, 72, 153, 0.14), 0 4px 10px -4px rgba(219, 39, 119, 0.08)',
+            'card-coral': '0 10px 26px -6px rgba(244, 63, 94, 0.16)',
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* Fondo cálido con patrón geométrico sutil estilo Neo-Pop */
+    body {
+      background-color: #FFFDF9;
+      background-image:
+        radial-gradient(circle at 12% 18%, rgba(99, 102, 241, 0.07) 0%, transparent 28%),
+        radial-gradient(circle at 88% 12%, rgba(236, 72, 153, 0.07) 0%, transparent 26%),
+        radial-gradient(circle at 82% 82%, rgba(16, 185, 129, 0.07) 0%, transparent 30%),
+        radial-gradient(rgba(124, 58, 237, 0.09) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 100% 100%, 26px 26px;
+      color: #1E1B4B;
+    }
+
+    /* Renderizado nítido de fracciones matemáticas apiladas */
+    .math-frac {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      vertical-align: middle;
+      margin: 0 0.18em;
+      line-height: 1.05;
+      font-size: 0.84em;
+      font-weight: 700;
+    }
+    .math-frac .num {
+      border-bottom: 1.8px solid currentColor;
+      padding: 0 0.22em 0.08em 0.22em;
+      display: block;
+    }
+    .math-frac .den {
+      padding: 0.08em 0.22em 0 0.22em;
+      display: block;
+    }
+
+    /* Exponentes nítidos */
+    sup {
+      font-size: 0.68em;
+      line-height: 0;
+      position: relative;
+      vertical-align: baseline;
+      top: -0.52em;
+      margin-left: 0.03em;
+      font-weight: 700;
+    }
+
+    /* Animaciones suaves */
+    @keyframes popIn {
+      0% { opacity: 0; transform: translateY(8px) scale(0.985); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .animate-pop {
+      animation: popIn 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes pulseCelebrate {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+    .animate-celebrate {
+      animation: pulseCelebrate 0.38s ease-in-out;
+    }
+
+    /* Barra de desplazamiento personalizada */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F5F3FF;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #C4B5FD;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #8B5CF6;
+    }
+  </style>
+</head>
+<body class="font-sans antialiased min-h-screen flex flex-col overflow-x-hidden selection:bg-violet-200 selection:text-violet-950">
+
+  <!-- ==================== ENCABEZADO VIBRANTE ==================== -->
+  <header class="relative overflow-hidden bg-gradient-to-r from-[#6366F1] via-[#7C3AED] to-[#EC4899] text-white shadow-lg">
+    <!-- Formas geométricas decorativas -->
+    <div class="pointer-events-none absolute -top-16 -left-16 w-64 h-64 rounded-full bg-white/10 blur-xl"></div>
+    <div class="pointer-events-none absolute top-6 right-10 w-40 h-40 rounded-3xl rotate-12 bg-amber-300/15 blur-lg"></div>
+    <div class="pointer-events-none absolute -bottom-20 right-1/4 w-72 h-72 rounded-full bg-cyan-300/15 blur-xl"></div>
+
+    <div class="relative max-w-6xl mx-auto px-4 sm:px-6 pt-7 pb-14 sm:pt-9 sm:pb-16">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+        <div class="max-w-2xl">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 text-xs sm:text-sm font-semibold tracking-wide mb-3">
+            <span class="w-2 h-2 rounded-full bg-amber-300 animate-ping"></span>
+            <span>4° Medio · Álgebra y Productos Notables</span>
+          </div>
+          <h1 class="font-display text-2xl sm:text-4xl font-extrabold tracking-tight leading-tight">
+            Factorización Interactiva:
+            <span class="block text-amber-200">De lo Directo a lo Encadenado</span>
+          </h1>
+          <p class="mt-2.5 text-sm sm:text-base text-indigo-100 leading-relaxed">
+            Desarrolla cada ejercicio en tu cuaderno, marca tu alternativa y verifica tu procedimiento paso a paso.
+          </p>
+        </div>
+
+        <!-- Botones de utilidad: Descargar HTML y Reiniciar -->
+        <div class="flex flex-wrap items-center gap-2.5 self-start lg:self-center">
+          <button
+            id="btnDownloadHtml"
+            type="button"
+            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white text-violet-800 font-semibold text-sm shadow-md hover:bg-amber-50 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+            title="Guardar una copia completa de esta guía interactiva en tu dispositivo"
+          >
+            <svg class="w-4 h-4 text-violet-600" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3" />
+            </svg>
+            <span>Descargar .html</span>
+          </button>
+
+          <button
+            id="btnOpenReset"
+            type="button"
+            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/15 hover:bg-white/25 border border-white/30 text-white font-semibold text-sm backdrop-blur-sm transition-all cursor-pointer"
+            title="Borrar respuestas guardadas y comenzar desde cero"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>Reiniciar progreso</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== CONTENIDO PRINCIPAL ==================== -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 -mt-8 pb-16 space-y-6">
+
+    <!-- PANEL DE ESTADÍSTICAS EN TIEMPO REAL -->
+    <section aria-label="Panel de progreso" class="bg-white rounded-3xl border-2 border-indigo-100 shadow-card-indigo p-4 sm:p-6">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <!-- Progreso -->
+        <div class="rounded-2xl bg-indigo-50/80 border border-indigo-200/80 p-3.5 sm:p-4 flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#6366F1] to-[#7C3AED] text-white flex items-center justify-center shrink-0 shadow-sm">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-indigo-600">Progreso</p>
+            <p id="statProgress" class="font-mono text-xl sm:text-2xl font-bold text-indigo-950">0 / 40</p>
+          </div>
+        </div>
+
+        <!-- Aciertos -->
+        <div class="rounded-2xl bg-emerald-50/80 border border-emerald-200/80 p-3.5 sm:p-4 flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#10B981] to-[#06B6D4] text-white flex items-center justify-center shrink-0 shadow-sm">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-emerald-700">Aciertos</p>
+            <p id="statCorrect" class="font-mono text-xl sm:text-2xl font-bold text-emerald-950">0</p>
+          </div>
+        </div>
+
+        <!-- Racha actual -->
+        <div class="rounded-2xl bg-amber-50/80 border border-amber-200/80 p-3.5 sm:p-4 flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#F59E0B] to-[#F97316] text-white flex items-center justify-center shrink-0 shadow-sm">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12.9 2.3c.3-.4.9-.3 1 .2.5 2.1 1.9 3.9 3.4 5.5 1.8 1.9 3.2 3.9 3.2 6.8 0 4.5-3.6 8.2-8.5 8.2s-8.5-3.7-8.5-8.2c0-2.5 1.1-4.8 2.9-6.6.4-.4 1-.1 1 .4-.1 1.2.4 2.3 1.2 2.9-.3-3.1 1.5-6.6 4.3-9.2z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-amber-700">Racha actual</p>
+            <p id="statStreak" class="font-mono text-xl sm:text-2xl font-bold text-amber-950">0</p>
+          </div>
+        </div>
+
+        <!-- Porcentaje de logro -->
+        <div class="rounded-2xl bg-pink-50/80 border border-pink-200/80 p-3.5 sm:p-4 flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#EC4899] to-[#DB2777] text-white flex items-center justify-center shrink-0 shadow-sm">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-pink-700">Logro</p>
+            <p id="statPercent" class="font-mono text-xl sm:text-2xl font-bold text-pink-950">0%</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Barra de progreso multicolor -->
+      <div class="mt-4">
+        <div class="flex items-center justify-between text-xs font-semibold text-slate-600 mb-1.5">
+          <span>Avance general de la guía</span>
+          <span id="progressLabel" class="font-mono text-indigo-700">0% completado</span>
+        </div>
+        <div class="w-full h-3.5 rounded-full bg-slate-100 border border-slate-200/80 overflow-hidden p-0.5">
+          <div
+            id="progressBarFill"
+            class="h-full rounded-full bg-gradient-to-r from-[#10B981] via-[#06B6D4] via-[#6366F1] to-[#EC4899] transition-all duration-500 ease-out"
+            style="width: 0%"
+          ></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BARRA DE HERRAMIENTAS, FILTROS Y MAPA RÁPIDO -->
+    <section aria-label="Filtros y navegación" class="bg-white rounded-3xl border-2 border-slate-200/90 shadow-sm p-4 sm:p-5 space-y-4">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3.5">
+        <!-- Pestañas de filtro -->
+        <div class="flex flex-wrap items-center gap-2" role="tablist" aria-label="Filtrar ejercicios">
+          <button
+            type="button"
+            data-filter="all"
+            class="filter-tab px-3.5 py-2 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer bg-indigo-600 text-white shadow-sm"
+          >
+            Todas (40)
+          </button>
+          <button
+            type="button"
+            data-filter="item1"
+            class="filter-tab px-3.5 py-2 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100"
+          >
+            Ítem I: Directas (20)
+          </button>
+          <button
+            type="button"
+            data-filter="item2"
+            class="filter-tab px-3.5 py-2 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer bg-pink-50 text-pink-800 border border-pink-200 hover:bg-pink-100"
+          >
+            Ítem II: Encadenadas (20)
+          </button>
+          <button
+            type="button"
+            data-filter="review"
+            class="filter-tab inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer bg-rose-50 text-rose-800 border border-rose-200 hover:bg-rose-100"
+          >
+            <span>Para repasar</span>
+            <span id="reviewCountBadge" class="font-mono text-xs px-1.5 py-0.5 rounded-full bg-rose-200/80 text-rose-900">0</span>
+          </button>
+        </div>
+
+        <!-- Selector de modo de vista -->
+        <div class="inline-flex p-1 rounded-2xl bg-slate-100 border border-slate-200 self-start lg:self-auto">
+          <button
+            id="btnModeList"
+            type="button"
+            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer bg-white text-indigo-700 shadow-sm"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            <span>Vista Completa</span>
+          </button>
+          <button
+            id="btnModeFocus"
+            type="button"
+            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer text-slate-600 hover:text-indigo-700"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            <span>Modo Enfoque (1 a 1)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mapa interactivo de 40 preguntas -->
+      <div class="pt-3 border-t border-slate-100">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Mapa de navegación rápida</span>
+          <div class="flex flex-wrap items-center gap-3 text-xs font-medium text-slate-600">
+            <span class="inline-flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-slate-200 border border-slate-300"></span> Sin responder
+            </span>
+            <span class="inline-flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Correcta
+            </span>
+            <span class="inline-flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Por repasar
+            </span>
+          </div>
+        </div>
+        <div id="quickNavGrid" class="grid grid-cols-8 sm:grid-cols-10 md:grid-cols-20 gap-1.5" style="grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));">
+          <!-- Generado dinámicamente por JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTROLES DE MODO ENFOQUE (SOLO VISIBLES EN MODO 1 A 1) -->
+    <div id="focusNavTop" class="hidden flex items-center justify-between gap-3 bg-white rounded-2xl border-2 border-violet-200 p-3 shadow-sm">
+      <button
+        id="btnPrevTop"
+        type="button"
+        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 hover:bg-indigo-100 text-slate-800 hover:text-indigo-800 font-bold text-sm disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+        <span>Anterior</span>
+      </button>
+
+      <div class="text-center">
+        <span id="focusCounterLabel" class="font-mono text-sm sm:text-base font-bold text-violet-900">Ejercicio 1 de 40</span>
+      </div>
+
+      <button
+        id="btnNextTop"
+        type="button"
+        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#7C3AED] hover:opacity-95 text-white font-bold text-sm disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer shadow-sm"
+      >
+        <span>Siguiente</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- CONTENEDOR DE EJERCICIOS -->
+    <section id="exercisesContainer" aria-live="polite" class="space-y-5">
+      <!-- Tarjetas de ejercicios renderizadas dinámicamente -->
+    </section>
+
+    <!-- CONTROLES INFERIORES DE MODO ENFOQUE -->
+    <div id="focusNavBottom" class="hidden flex items-center justify-between gap-3 bg-white rounded-2xl border-2 border-violet-200 p-3.5 shadow-sm">
+      <button
+        id="btnPrevBottom"
+        type="button"
+        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-indigo-100 text-slate-800 hover:text-indigo-800 font-bold text-sm disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+        <span>Anterior</span>
+      </button>
+
+      <span class="hidden sm:inline text-xs font-medium text-slate-500">Tip: También puedes usar las flechas ← y → del teclado</span>
+
+      <button
+        id="btnNextBottom"
+        type="button"
+        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#7C3AED] hover:opacity-95 text-white font-bold text-sm disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer shadow-sm"
+      >
+        <span>Siguiente</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    </div>
+  </main>
+
+  <!-- ==================== MODAL DE CONFIRMACIÓN DE REINICIO ==================== -->
+  <div id="resetModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-indigo-950/50 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl border-2 border-indigo-100 max-w-md w-full p-6 shadow-2xl animate-pop">
+      <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mb-4">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </div>
+      <h2 class="font-display text-xl font-extrabold text-slate-900">¿Reiniciar todo tu progreso?</h2>
+      <p class="mt-2 text-sm text-slate-600 leading-relaxed">
+        Se borrarán tus respuestas marcadas, tus aciertos y tu racha actual para que puedas volver a practicar desde el ejercicio 1.
+      </p>
+      <div class="mt-6 flex items-center justify-end gap-3">
+        <button
+          id="btnCancelReset"
+          type="button"
+          class="px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm transition-colors cursor-pointer"
+        >
+          Cancelar
+        </button>
+        <button
+          id="btnConfirmReset"
+          type="button"
+          class="px-4 py-2.5 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-sm shadow-md transition-colors cursor-pointer"
+        >
+          Sí, reiniciar todo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== NOTIFICACIÓN TOAST FLOTANTE ==================== -->
+  <div id="toastBanner" class="fixed bottom-5 right-5 z-50 pointer-events-none opacity-0 translate-y-3 transition-all duration-300">
+    <div class="bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-sm font-semibold border border-white/10">
+      <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+      <span id="toastMessage">Archivo descargado</span>
+    </div>
+  </div>
+
+  <!-- ==================== LÓGICA DE LA APLICACIÓN ==================== -->
+  <script>
+    // Base de datos completa con los 40 ejercicios (20 Ítem I + 20 Ítem II)
+    const EXERCISES = [
+      // --- ÍTEM I: FACTORIZACIÓN DIRECTA (1 al 20) ---
+      {
+        id: 1,
+        item: 1,
+        expression: "6x³ - 9x²",
+        hint: "Factor común monomio",
+        options: {
+          A: "3x(2x² - 3)",
+          B: "3x²(2x - 3)",
+          C: "6x²(x - 3)",
+          D: "3x²(2x - 9)"
+        },
+        correct: "B",
+        explanation: "El máximo común divisor entre 6 y 9 es 3, y entre x³ y x² es x². Al extraer 3x² queda: 3x²(2x - 3)."
+      },
+      {
+        id: 2,
+        item: 1,
+        expression: "12a³b² - 18a²b³ + 6a²b²",
+        hint: "Factor común monomio multivariable",
+        options: {
+          A: "6a²b²(2a - 3b)",
+          B: "6ab(2a²b - 3ab² + ab)",
+          C: "6a²b²(2a - 3b + 1)",
+          D: "12a²b²(a - 2b + 1)"
+        },
+        correct: "C",
+        explanation: "El factor común es 6a²b². Al dividir el tercer término 6a²b² por sí mismo resulta +1 (¡nunca olvides ese 1!). Resultado: 6a²b²(2a - 3b + 1)."
+      },
+      {
+        id: 3,
+        item: 1,
+        expression: "5x(a - 2) - 3(a - 2)",
+        hint: "Factor común polinomio",
+        options: {
+          A: "(a - 2)(5x - 3)",
+          B: "(a - 2)²(5x - 3)",
+          C: "(a + 2)(5x - 3)",
+          D: "15x(a - 2)"
+        },
+        correct: "A",
+        explanation: "El binomio (a - 2) se repite en ambos términos. Al extraerlo como factor común queda (a - 2)(5x - 3)."
+      },
+      {
+        id: 4,
+        item: 1,
+        expression: "(3/4)m² - (9/4)m",
+        hint: "Factor común con fracciones",
+        options: {
+          A: "(3/4)(m² - 3)",
+          B: "(3/4)m(m - 9)",
+          C: "(3/4)m(m - 3)",
+          D: "(1/4)m(3m - 3)"
+        },
+        correct: "C",
+        explanation: "Entre (3/4) y (9/4) el factor común es (3/4), y entre m² y m es m. Extrayendo (3/4)m queda (3/4)m(m - 3)."
+      },
+      {
+        id: 5,
+        item: 1,
+        expression: "x² - 64",
+        hint: "Suma por su diferencia",
+        options: {
+          A: "(x - 8)²",
+          B: "(x + 32)(x - 32)",
+          C: "(x + 8)(x - 8)",
+          D: "(x + 8)²"
+        },
+        correct: "C",
+        explanation: "Resta de dos cuadrados: x² y 8² = 64. Se factoriza como suma por su diferencia: (x + 8)(x - 8)."
+      },
+      {
+        id: 6,
+        item: 1,
+        expression: "49a⁴ - 16b²",
+        hint: "Suma por su diferencia con potencias",
+        options: {
+          A: "(7a² + 4b)(7a² - 4b)",
+          B: "(7a² - 4b)²",
+          C: "(49a² + 16b)(49a² - 16b)",
+          D: "(7a + 4b)(7a - 4b)"
+        },
+        correct: "A",
+        explanation: "La raíz cuadrada de 49a⁴ es 7a² y la de 16b² es 4b. Aplicando suma por su diferencia: (7a² + 4b)(7a² - 4b)."
+      },
+      {
+        id: 7,
+        item: 1,
+        expression: "(1/9)y² - (4/25)",
+        hint: "Suma por su diferencia con racionales",
+        options: {
+          A: "((1/3)y - (2/5))²",
+          B: "((1/9)y + (4/25))((1/9)y - (4/25))",
+          C: "((1/3)y + (2/5))((1/3)y - (2/5))",
+          D: "((1/3)y + (4/5))((1/3)y - (4/5))"
+        },
+        correct: "C",
+        explanation: "Raíz de (1/9)y² es (1/3)y y raíz de (4/25) es (2/5). Queda ((1/3)y + (2/5))((1/3)y - (2/5))."
+      },
+      {
+        id: 8,
+        item: 1,
+        expression: "x² + 14x + 49",
+        hint: "Cuadrado de binomio (suma)",
+        options: {
+          A: "(x + 7)(x - 7)",
+          B: "(x + 7)²",
+          C: "(x + 14)²",
+          D: "(x + 49)²"
+        },
+        correct: "B",
+        explanation: "Los extremos son cuadrados perfectos (x² y 7²) y el término central es el doble producto: 2·x·7 = 14x. Resultado: (x + 7)²."
+      },
+      {
+        id: 9,
+        item: 1,
+        expression: "9m² - 30m + 25",
+        hint: "Cuadrado de binomio (resta)",
+        options: {
+          A: "(3m + 5)(3m - 5)",
+          B: "(9m - 25)²",
+          C: "(3m + 5)²",
+          D: "(3m - 5)²"
+        },
+        correct: "D",
+        explanation: "9m² = (3m)², 25 = 5² y el término central negativo es -2(3m)(5) = -30m. Corresponde a (3m - 5)²."
+      },
+      {
+        id: 10,
+        item: 1,
+        expression: "16p² + 24pq + 9q²",
+        hint: "Cuadrado de binomio con dos variables",
+        options: {
+          A: "(4p + 3q)²",
+          B: "(4p - 3q)²",
+          C: "(4p + 3q)(4p - 3q)",
+          D: "(8p + 3q)²"
+        },
+        correct: "A",
+        explanation: "(4p)² = 16p², (3q)² = 9q² y 2(4p)(3q) = 24pq. Se factoriza como (4p + 3q)²."
+      },
+      {
+        id: 11,
+        item: 1,
+        expression: "x³ + 9x² + 27x + 27",
+        hint: "Cubo de binomio (suma)",
+        options: {
+          A: "(x + 9)³",
+          B: "(x + 3)³",
+          C: "(x + 3)(x² + 9)",
+          D: "(x - 3)³"
+        },
+        correct: "B",
+        explanation: "Extremos cúbicos x³ y 3³ = 27. Verificamos términos centrales: 3·x²·3 = 9x² y 3·x·3² = 27x. Es (x + 3)³."
+      },
+      {
+        id: 12,
+        item: 1,
+        expression: "8a³ - 12a² + 6a - 1",
+        hint: "Cubo de binomio (resta)",
+        options: {
+          A: "(2a + 1)³",
+          B: "(8a - 1)³",
+          C: "(2a - 1)³",
+          D: "(2a - 1)(4a² + 1)"
+        },
+        correct: "C",
+        explanation: "(2a)³ = 8a³, (-1)³ = -1, con signos alternados: -3(2a)²(1) = -12a² y +3(2a)(1)² = +6a. Resultado: (2a - 1)³."
+      },
+      {
+        id: 13,
+        item: 1,
+        expression: "x² + 11x + 24",
+        hint: "Trinomio de la forma x² + bx + c",
+        options: {
+          A: "(x + 12)(x + 2)",
+          B: "(x + 6)(x + 4)",
+          C: "(x + 8)(x + 3)",
+          D: "(x - 8)(x - 3)"
+        },
+        correct: "C",
+        explanation: "Buscamos dos números que sumados den 11 y multiplicados den 24: son 8 y 3. Queda (x + 8)(x + 3)."
+      },
+      {
+        id: 14,
+        item: 1,
+        expression: "y² - 10y + 21",
+        hint: "Trinomio de la forma x² + bx + c",
+        options: {
+          A: "(y - 7)(y - 3)",
+          B: "(y + 7)(y - 3)",
+          C: "(y - 7)(y + 3)",
+          D: "(y - 21)(y - 1)"
+        },
+        correct: "A",
+        explanation: "Producto positivo (+21) y suma negativa (-10) indican dos números negativos: -7 y -3. Resultado: (y - 7)(y - 3)."
+      },
+      {
+        id: 15,
+        item: 1,
+        expression: "m² + 3m - 28",
+        hint: "Trinomio de la forma x² + bx + c",
+        options: {
+          A: "(m - 7)(m + 4)",
+          B: "(m + 7)(m - 4)",
+          C: "(m + 14)(m - 2)",
+          D: "(m - 7)(m - 4)"
+        },
+        correct: "B",
+        explanation: "Dos números que multiplicados den -28 y sumados den +3: son +7 y -4. Resultado: (m + 7)(m - 4)."
+      },
+      {
+        id: 16,
+        item: 1,
+        expression: "w² - 2w - 35",
+        hint: "Trinomio de la forma x² + bx + c",
+        options: {
+          A: "(w + 7)(w - 5)",
+          B: "(w - 35)(w + 1)",
+          C: "(w - 7)(w - 5)",
+          D: "(w - 7)(w + 5)"
+        },
+        correct: "D",
+        explanation: "Dos números que multiplicados den -35 y sumados den -2: son -7 y +5. Resultado: (w - 7)(w + 5)."
+      },
+      {
+        id: 17,
+        item: 1,
+        expression: "2x² + 7x + 3",
+        hint: "Trinomio modelo (ax + b)(x + c)",
+        options: {
+          A: "(2x + 3)(x + 1)",
+          B: "(2x + 1)(x + 3)",
+          C: "(2x - 1)(x - 3)",
+          D: "(x + 1)(x + 6)"
+        },
+        correct: "B",
+        explanation: "Buscamos (2x + _)(x + _). Probando combinaciones de 3: (2x + 1)(x + 3) = 2x² + 6x + x + 3 = 2x² + 7x + 3."
+      },
+      {
+        id: 18,
+        item: 1,
+        expression: "3x² - 10x + 8",
+        hint: "Trinomio modelo (ax + b)(x + c)",
+        options: {
+          A: "(3x - 4)(x - 2)",
+          B: "(3x - 2)(x - 4)",
+          C: "(3x + 4)(x + 2)",
+          D: "(3x - 8)(x - 1)"
+        },
+        correct: "A",
+        explanation: "Con ambos signos negativos: (3x - 4)(x - 2) = 3x² - 6x - 4x + 8 = 3x² - 10x + 8."
+      },
+      {
+        id: 19,
+        item: 1,
+        expression: "5a² + 13a - 6",
+        hint: "Trinomio modelo (ax + b)(x + c)",
+        options: {
+          A: "(5a + 2)(a - 3)",
+          B: "(5a + 3)(a - 2)",
+          C: "(5a - 2)(a + 3)",
+          D: "(5a - 6)(a + 1)"
+        },
+        correct: "C",
+        explanation: "Probamos (5a - 2)(a + 3) = 5a² + 15a - 2a - 6 = 5a² + 13a - 6."
+      },
+      {
+        id: 20,
+        item: 1,
+        expression: "6x² - x - 2",
+        hint: "Trinomio modelo (ax + b)(cx + d)",
+        options: {
+          A: "(3x + 2)(2x - 1)",
+          B: "(6x - 1)(x + 2)",
+          C: "(3x - 1)(2x + 2)",
+          D: "(3x - 2)(2x + 1)"
+        },
+        correct: "D",
+        explanation: "Descomponemos 6x² en 3x·2x: (3x - 2)(2x + 1) = 6x² + 3x - 4x - 2 = 6x² - x - 2."
+      },
+
+      // --- ÍTEM II: FACTORIZACIÓN ENCADENADA / COMPLEJA (21 al 40) ---
+      {
+        id: 21,
+        item: 2,
+        expression: "3x² - 27",
+        hint: "Factor común + Suma por su diferencia",
+        options: {
+          A: "3(x² - 9)",
+          B: "3(x + 3)(x - 3)",
+          C: "3(x - 3)²",
+          D: "(3x + 9)(x - 3)"
+        },
+        correct: "B",
+        explanation: "Paso 1: Extrae factor común 3 → 3(x² - 9). Paso 2: Factoriza la suma por su diferencia → 3(x + 3)(x - 3)."
+      },
+      {
+        id: 22,
+        item: 2,
+        expression: "x³ - 16x",
+        hint: "Factor común literal + Suma por su diferencia",
+        options: {
+          A: "x(x + 4)(x - 4)",
+          B: "x(x² - 16)",
+          C: "x(x - 4)²",
+          D: "(x² + 4)(x - 4)"
+        },
+        correct: "A",
+        explanation: "Paso 1: Factor común x → x(x² - 16). Paso 2: Suma por su diferencia en el paréntesis → x(x + 4)(x - 4)."
+      },
+      {
+        id: 23,
+        item: 2,
+        expression: "2x² + 12x + 18",
+        hint: "Factor común + Cuadrado de binomio",
+        options: {
+          A: "2(x² + 6x + 9)",
+          B: "(2x + 6)²",
+          C: "2(x + 3)²",
+          D: "2(x + 3)(x - 3)"
+        },
+        correct: "C",
+        explanation: "Paso 1: Factor común 2 → 2(x² + 6x + 9). Paso 2: El trinomio es un cuadrado de binomio → 2(x + 3)²."
+      },
+      {
+        id: 24,
+        item: 2,
+        expression: "5a³ - 20a² + 20a",
+        hint: "Factor común + Cuadrado de binomio",
+        options: {
+          A: "5a(a² - 4a + 4)",
+          B: "5a(a + 2)(a - 2)",
+          C: "5(a - 2)²",
+          D: "5a(a - 2)²"
+        },
+        correct: "D",
+        explanation: "Paso 1: Extrae factor común 5a → 5a(a² - 4a + 4). Paso 2: Factoriza el cuadrado de binomio → 5a(a - 2)²."
+      },
+      {
+        id: 25,
+        item: 2,
+        expression: "4x² + 20x + 24",
+        hint: "Factor común + Trinomio x² + bx + c",
+        options: {
+          A: "4(x + 2)(x + 3)",
+          B: "4(x + 6)(x + 1)",
+          C: "(4x + 8)(x + 3)",
+          D: "4(x² + 5x + 6)"
+        },
+        correct: "A",
+        explanation: "Paso 1: Factor común 4 → 4(x² + 5x + 6). Paso 2: Dos números que sumen 5 y multipliquen 6 → 4(x + 2)(x + 3)."
+      },
+      {
+        id: 26,
+        item: 2,
+        expression: "3m² - 3m - 36",
+        hint: "Factor común + Trinomio x² + bx + c",
+        options: {
+          A: "3(m + 4)(m - 3)",
+          B: "3(m - 4)(m + 3)",
+          C: "3(m - 6)(m + 2)",
+          D: "3(m² - m - 12)"
+        },
+        correct: "B",
+        explanation: "Paso 1: Factor común 3 → 3(m² - m - 12). Paso 2: Factoriza el trinomio con -4 y +3 → 3(m - 4)(m + 3)."
+      },
+      {
+        id: 27,
+        item: 2,
+        expression: "-2y² + 10y - 12",
+        hint: "Factor común negativo + Trinomio",
+        options: {
+          A: "-2(y + 2)(y + 3)",
+          B: "2(y - 2)(y - 3)",
+          C: "-2(y - 2)(y - 3)",
+          D: "-2(y - 6)(y + 1)"
+        },
+        correct: "C",
+        explanation: "Paso 1: Extrae -2 (cambiando los signos interiores) → -2(y² - 5y + 6). Paso 2: Factoriza el trinomio → -2(y - 2)(y - 3)."
+      },
+      {
+        id: 28,
+        item: 2,
+        expression: "2x³ + 7x² + 3x",
+        hint: "Factor común literal + Trinomio (ax + b)(x + c)",
+        options: {
+          A: "x(2x + 3)(x + 1)",
+          B: "(2x² + x)(x + 3)",
+          C: "x(2x + 1)(x + 3)",
+          D: "2x(x + 1)(x + 3)"
+        },
+        correct: "C",
+        explanation: "Paso 1: Extrae x → x(2x² + 7x + 3). Paso 2: Factoriza el trinomio → x(2x + 1)(x + 3)."
+      },
+      {
+        id: 29,
+        item: 2,
+        expression: "6a² - 20a + 16",
+        hint: "Factor común + Trinomio (ax + b)(x + c)",
+        options: {
+          A: "2(3a - 4)(a - 2)",
+          B: "2(3a - 2)(a - 4)",
+          C: "(6a - 8)(a - 2)",
+          D: "2(3a² - 10a + 8)"
+        },
+        correct: "A",
+        explanation: "Paso 1: Extrae 2 → 2(3a² - 10a + 8). Paso 2: Factoriza el trinomio → 2(3a - 4)(a - 2)."
+      },
+      {
+        id: 30,
+        item: 2,
+        expression: "x⁴ - 16",
+        hint: "Doble suma por su diferencia",
+        options: {
+          A: "(x² + 4)(x² - 4)",
+          B: "(x + 2)²(x - 2)²",
+          C: "(x² + 4)(x + 2)(x - 2)",
+          D: "(x + 2)(x - 2)³"
+        },
+        correct: "C",
+        explanation: "Paso 1: Suma por su diferencia → (x² + 4)(x² - 4). Paso 2: El segundo factor vuelve a ser suma por su diferencia → (x² + 4)(x + 2)(x - 2)."
+      },
+      {
+        id: 31,
+        item: 2,
+        expression: "81m⁴ - 1",
+        hint: "Doble suma por su diferencia",
+        options: {
+          A: "(9m² + 1)(9m² - 1)",
+          B: "(3m + 1)²(3m - 1)²",
+          C: "(9m² - 1)(3m + 1)(3m - 1)",
+          D: "(9m² + 1)(3m + 1)(3m - 1)"
+        },
+        correct: "D",
+        explanation: "Paso 1: (9m² + 1)(9m² - 1). Paso 2: Descomponemos 9m² - 1 → (9m² + 1)(3m + 1)(3m - 1)."
+      },
+      {
+        id: 32,
+        item: 2,
+        expression: "2y⁴ - 162",
+        hint: "Factor común + Doble suma por su diferencia",
+        options: {
+          A: "2(y² + 9)(y + 3)(y - 3)",
+          B: "2(y² + 9)(y² - 9)",
+          C: "2(y + 3)²(y - 3)²",
+          D: "(2y² + 18)(y + 3)(y - 3)"
+        },
+        correct: "A",
+        explanation: "Paso 1: Factor común 2 → 2(y⁴ - 81). Paso 2: 2(y² + 9)(y² - 9). Paso 3: 2(y² + 9)(y + 3)(y - 3)."
+      },
+      {
+        id: 33,
+        item: 2,
+        expression: "3x³ + 18x² + 36x + 24",
+        hint: "Factor común + Cubo de binomio",
+        options: {
+          A: "3(x + 4)³",
+          B: "3(x + 2)³",
+          C: "(3x + 6)³",
+          D: "3(x + 2)(x² + 4)"
+        },
+        correct: "B",
+        explanation: "Paso 1: Factor común 3 → 3(x³ + 6x² + 12x + 8). Paso 2: Cubo de binomio → 3(x + 2)³."
+      },
+      {
+        id: 34,
+        item: 2,
+        expression: "(x + 5)² - 9",
+        hint: "Suma por su diferencia con binomio compuesto",
+        options: {
+          A: "(x + 5 + 9)(x + 5 - 9)",
+          B: "(x + 8)(x - 4)",
+          C: "(x + 8)(x + 2)",
+          D: "(x + 2)²"
+        },
+        correct: "C",
+        explanation: "Es una diferencia de cuadrados A² - B² donde A = (x + 5) y B = 3. Queda [(x + 5) + 3][(x + 5) - 3] = (x + 8)(x + 2)."
+      },
+      {
+        id: 35,
+        item: 2,
+        expression: "(2a + 1)² - (a - 3)²",
+        hint: "Diferencia de dos cuadrados compuestos",
+        options: {
+          A: "(3a - 2)(a - 2)",
+          B: "(3a + 4)(a - 2)",
+          C: "(a + 4)(a - 2)",
+          D: "(3a - 2)(a + 4)"
+        },
+        correct: "D",
+        explanation: "Suma por su diferencia: [(2a + 1) + (a - 3)][(2a + 1) - (a - 3)] = (3a - 2)(2a + 1 - a + 3) = (3a - 2)(a + 4)."
+      },
+      {
+        id: 36,
+        item: 2,
+        expression: "x³ + 3x² - 4x - 12",
+        hint: "Agrupación de términos + Suma por su diferencia",
+        options: {
+          A: "(x + 3)(x + 2)(x - 2)",
+          B: "(x + 3)(x² - 4)",
+          C: "(x - 3)(x + 2)(x - 2)",
+          D: "(x + 3)(x - 2)²"
+        },
+        correct: "A",
+        explanation: "Paso 1: Agrupa en parejas: x²(x + 3) - 4(x + 3) = (x + 3)(x² - 4). Paso 2: Factoriza x² - 4 → (x + 3)(x + 2)(x - 2)."
+      },
+      {
+        id: 37,
+        item: 2,
+        expression: "2a³ - a² - 18a + 9",
+        hint: "Agrupación de términos + Suma por su diferencia",
+        options: {
+          A: "(2a - 1)(a² - 9)",
+          B: "(2a - 1)(a + 3)(a - 3)",
+          C: "(2a + 1)(a + 3)(a - 3)",
+          D: "(2a - 1)(a - 3)²"
+        },
+        correct: "B",
+        explanation: "Paso 1: a²(2a - 1) - 9(2a - 1) = (2a - 1)(a² - 9). Paso 2: Factoriza a² - 9 → (2a - 1)(a + 3)(a - 3)."
+      },
+      {
+        id: 38,
+        item: 2,
+        expression: "x⁴ - 5x² + 4",
+        hint: "Trinomio bicuadrado + Doble suma por su diferencia",
+        options: {
+          A: "(x² - 4)(x² - 1)",
+          B: "(x - 2)²(x - 1)²",
+          C: "(x + 2)(x - 2)(x + 1)(x - 1)",
+          D: "(x + 4)(x - 1)(x² + 1)"
+        },
+        correct: "C",
+        explanation: "Paso 1: Factoriza como trinomio en x²: (x² - 4)(x² - 1). Paso 2: Aplica suma por su diferencia en ambos paréntesis → (x + 2)(x - 2)(x + 1)(x - 1)."
+      },
+      {
+        id: 39,
+        item: 2,
+        expression: "x⁴ + 3x² - 4",
+        hint: "Trinomio bicuadrado + Suma por su diferencia",
+        options: {
+          A: "(x + 2)(x - 2)(x + 1)(x - 1)",
+          B: "(x² + 4)(x² - 1)",
+          C: "(x² - 4)(x + 1)(x - 1)",
+          D: "(x² + 4)(x + 1)(x - 1)"
+        },
+        correct: "D",
+        explanation: "Paso 1: (x² + 4)(x² - 1). Paso 2: x² + 4 no es factorizable en los reales, pero x² - 1 sí → (x² + 4)(x + 1)(x - 1)."
+      },
+      {
+        id: 40,
+        item: 2,
+        expression: "x² + 6x + 9 - y²",
+        hint: "Cuadrado de binomio agrupado + Suma por su diferencia",
+        options: {
+          A: "(x + 3 + y)(x + 3 - y)",
+          B: "(x + 3 - y)²",
+          C: "(x + y + 3)(x + y - 3)",
+          D: "(x + 9 + y)(x - 1 - y)"
+        },
+        correct: "A",
+        explanation: "Paso 1: Los tres primeros términos forman un cuadrado de binomio: (x + 3)² - y². Paso 2: Aplica suma por su diferencia → (x + 3 + y)(x + 3 - y)."
+      }
+    ];
+
+    // Clave de almacenamiento local
+    const STORAGE_KEY = 'factorizacion_4medio_progress_v1';
+
+    // Estado global de la aplicación
+    let state = {
+      filter: 'all',       // 'all' | 'item1' | 'item2' | 'review'
+      mode: 'list',        // 'list' | 'focus'
+      focusIndex: 0,       // Índice dentro de la lista filtrada actual
+      streak: 0,           // Racha actual de aciertos consecutivos
+      questions: {}        // { [id]: { selected: 'A'|null, status: 'unanswered'|'correct'|'wrong'|'revealed', showHint: boolean } }
+    };
+
+    // Inicializar estado por pregunta
+    function initDefaultQuestions() {
+      const qState = {};
+      EXERCISES.forEach(ex => {
+        qState[ex.id] = {
+          selected: null,
+          status: 'unanswered', // 'unanswered' | 'correct' | 'wrong' | 'revealed'
+          showHint: false
+        };
+      });
+      return qState;
+    }
+
+    // Cargar progreso desde localStorage de forma segura
+    function loadProgress() {
+      state.questions = initDefaultQuestions();
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (typeof parsed.streak === 'number') state.streak = parsed.streak;
+          if (parsed.questions && typeof parsed.questions === 'object') {
+            EXERCISES.forEach(ex => {
+              if (parsed.questions[ex.id]) {
+                state.questions[ex.id] = {
+                  ...state.questions[ex.id],
+                  ...parsed.questions[ex.id]
+                };
+              }
+            });
+          }
+        }
+      } catch (e) {
+        // Ignorar errores de almacenamiento en entornos restringidos
+      }
+    }
+
+    // Guardar progreso en localStorage
+    function saveProgress() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          streak: state.streak,
+          questions: state.questions
+        }));
+      } catch (e) {
+        // Ignorar errores si el navegador bloquea localStorage
+      }
+    }
+
+    // Formatear expresiones algebraicas con superíndices y fracciones apiladas
+    function formatMath(text) {
+      let html = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      // Reemplazar exponentes Unicode por etiquetas <sup>
+      html = html
+        .replace(/²/g, '<sup>2</sup>')
+        .replace(/³/g, '<sup>3</sup>')
+        .replace(/⁴/g, '<sup>4</sup>');
+
+      // Reemplazar fracciones entre paréntesis como (3/4) o (4/25) por fracción vertical estilizada
+      html = html.replace(/\((\d+)\/(\d+)\)/g, '<span class="math-frac"><span class="num">$1</span><span class="den">$2</span></span>');
+
+      // Estilizar flechas de pasos
+      html = html.replace(/→/g, '<span class="inline-block mx-1.5 text-indigo-600 font-bold">→</span>');
+
+      return html;
+    }
+
+    // Obtener ejercicios filtrados según la pestaña activa
+    function getFilteredExercises() {
+      return EXERCISES.filter(ex => {
+        const qs = state.questions[ex.id];
+        if (state.filter === 'item1') return ex.item === 1;
+        if (state.filter === 'item2') return ex.item === 2;
+        if (state.filter === 'review') return qs.status === 'wrong' || qs.status === 'revealed';
+        return true;
+      });
+    }
+
+    // Actualizar panel de estadísticas superior y barra de progreso
+    function updateStatsUI() {
+      let answeredCount = 0;
+      let correctCount = 0;
+      let reviewCount = 0;
+
+      EXERCISES.forEach(ex => {
+        const st = state.questions[ex.id].status;
+        if (st === 'correct' || st === 'wrong' || st === 'revealed') {
+          answeredCount++;
+        }
+        if (st === 'correct') {
+          correctCount++;
+        }
+        if (st === 'wrong' || st === 'revealed') {
+          reviewCount++;
+        }
+      });
+
+      const pct = Math.round((correctCount / EXERCISES.length) * 100);
+      const progressPct = Math.round((answeredCount / EXERCISES.length) * 100);
+
+      document.getElementById('statProgress').textContent = `${answeredCount} / ${EXERCISES.length}`;
+      document.getElementById('statCorrect').textContent = `${correctCount}`;
+      document.getElementById('statStreak').textContent = `${state.streak}`;
+      document.getElementById('statPercent').textContent = `${pct}%`;
+      document.getElementById('progressLabel').textContent = `${progressPct}% completado`;
+      document.getElementById('progressBarFill').style.width = `${progressPct}%`;
+      document.getElementById('reviewCountBadge').textContent = `${reviewCount}`;
+    }
+
+    // Renderizar mapa rápido de 40 botones
+    function renderQuickNav() {
+      const grid = document.getElementById('quickNavGrid');
+      const filtered = getFilteredExercises();
+      const activeFocusId = (state.mode === 'focus' && filtered[state.focusIndex]) ? filtered[state.focusIndex].id : null;
+
+      grid.innerHTML = EXERCISES.map(ex => {
+        const qs = state.questions[ex.id];
+        let btnClass = 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-indigo-50 hover:border-indigo-300';
+
+        if (qs.status === 'correct') {
+          btnClass = 'bg-emerald-500 text-white border-emerald-600 shadow-xs';
+        } else if (qs.status === 'wrong' || qs.status === 'revealed') {
+          btnClass = 'bg-rose-500 text-white border-rose-600 shadow-xs';
+        } else if (qs.selected) {
+          btnClass = 'bg-indigo-100 text-indigo-800 border-indigo-400';
+        }
+
+        const ringClass = (activeFocusId === ex.id) ? 'ring-2 ring-offset-2 ring-violet-600 scale-105' : '';
+
+        return `
+          <button
+            type="button"
+            onclick="jumpToQuestion(${ex.id})"
+            class="h-8.5 py-1 rounded-xl border font-mono text-xs font-bold transition-all cursor-pointer ${btnClass} ${ringClass}"
+            title="Ir al ejercicio ${ex.id} (Ítem ${ex.item === 1 ? 'I' : 'II'})"
+          >
+            ${ex.id}
+          </button>
+        `;
+      }).join('');
+    }
+
+    // Saltar a un ejercicio desde el mapa rápido
+    function jumpToQuestion(id) {
+      const targetEx = EXERCISES.find(e => e.id === id);
+      if (!targetEx) return;
+
+      // Si el filtro actual oculta ese ejercicio, cambiamos a 'all'
+      const currentFiltered = getFilteredExercises();
+      let idx = currentFiltered.findIndex(e => e.id === id);
+
+      if (idx === -1) {
+        state.filter = 'all';
+        updateFilterTabsUI();
+        idx = EXERCISES.findIndex(e => e.id === id);
+      }
+
+      if (state.mode === 'focus') {
+        state.focusIndex = idx;
+        renderApp();
+        document.getElementById('exercisesContainer').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } else {
+        renderApp();
+        const cardEl = document.getElementById(`card-ex-${id}`);
+        if (cardEl) {
+          cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          cardEl.classList.add('ring-4', 'ring-indigo-300');
+          setTimeout(() => cardEl.classList.remove('ring-4', 'ring-indigo-300'), 1100);
+        }
+      }
+    }
+
+    // Actualizar estilos de las pestañas de filtro
+    function updateFilterTabsUI() {
+      document.querySelectorAll('.filter-tab').forEach(btn => {
+        const f = btn.getAttribute('data-filter');
+        const isActive = f === state.filter;
+        btn.className = 'filter-tab inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer ';
+
+        if (isActive) {
+          if (f === 'item1') {
+            btn.className += 'bg-gradient-to-r from-[#10B981] to-[#06B6D4] text-white shadow-sm';
+          } else if (f === 'item2') {
+            btn.className += 'bg-gradient-to-r from-[#EC4899] to-[#DB2777] text-white shadow-sm';
+          } else if (f === 'review') {
+            btn.className += 'bg-rose-500 text-white shadow-sm';
+          } else {
+            btn.className += 'bg-gradient-to-r from-[#6366F1] to-[#7C3AED] text-white shadow-sm';
+          }
+        } else {
+          if (f === 'item1') {
+            btn.className += 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100';
+          } else if (f === 'item2') {
+            btn.className += 'bg-pink-50 text-pink-800 border border-pink-200 hover:bg-pink-100';
+          } else if (f === 'review') {
+            btn.className += 'bg-rose-50 text-rose-800 border border-rose-200 hover:bg-rose-100';
+          } else {
+            btn.className += 'bg-indigo-50 text-indigo-800 border border-indigo-200 hover:bg-indigo-100';
+          }
+        }
+      });
+    }
+
+    // Actualizar estilos del selector de modo (Lista vs Enfoque)
+    function updateModeToggleUI() {
+      const btnList = document.getElementById('btnModeList');
+      const btnFocus = document.getElementById('btnModeFocus');
+      const focusTop = document.getElementById('focusNavTop');
+      const focusBottom = document.getElementById('focusNavBottom');
+
+      if (state.mode === 'list') {
+        btnList.className = 'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer bg-white text-indigo-700 shadow-sm';
+        btnFocus.className = 'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer text-slate-600 hover:text-indigo-700';
+        focusTop.classList.add('hidden');
+        focusBottom.classList.add('hidden');
+      } else {
+        btnFocus.className = 'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer bg-white text-violet-700 shadow-sm';
+        btnList.className = 'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer text-slate-600 hover:text-indigo-700';
+        focusTop.classList.remove('hidden');
+        focusBottom.classList.remove('hidden');
+      }
+    }
+
+    // Generar el HTML de una tarjeta de ejercicio
+    function buildExerciseCardHTML(ex) {
+      const qs = state.questions[ex.id];
+      const isItem1 = ex.item === 1;
+
+      // Colores dinámicos según Ítem y estado
+      let cardBorder = isItem1 ? 'border-emerald-200/90 shadow-card-emerald' : 'border-pink-200/90 shadow-card-magenta';
+      if (qs.status === 'correct') cardBorder = 'border-emerald-400 shadow-card-emerald';
+      if (qs.status === 'wrong') cardBorder = 'border-rose-400 shadow-card-coral';
+
+      const itemBadge = isItem1
+        ? `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-[#10B981] to-[#06B6D4] text-white shadow-xs">Ítem I · Directa</span>`
+        : `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-[#EC4899] to-[#DB2777] text-white shadow-xs">Ítem II · Encadenada</span>`;
+
+      let statusBadge = '';
+      if (qs.status === 'correct') {
+        statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">✓ Logrado</span>`;
+      } else if (qs.status === 'wrong') {
+        statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300">! Revisar</span>`;
+      } else if (qs.status === 'revealed') {
+        statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">Solución vista</span>`;
+      }
+
+      // Renderizado de alternativas A, B, C, D
+      const optionKeys = ['A', 'B', 'C', 'D'];
+      const isLocked = qs.status === 'correct' || qs.status === 'wrong' || qs.status === 'revealed';
+
+      const optionsHTML = optionKeys.map(letter => {
+        const isSelected = qs.selected === letter;
+        const isCorrectOption = ex.correct === letter;
+
+        let optContainerClass = 'bg-white border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/40 text-slate-800';
+        let letterCircleClass = 'bg-slate-100 text-slate-700 border-slate-300';
+        let rightIcon = '';
+
+        if (qs.status === 'correct') {
+          if (isCorrectOption) {
+            optContainerClass = 'bg-emerald-50 border-emerald-500 text-emerald-950 ring-2 ring-emerald-400/40';
+            letterCircleClass = 'bg-emerald-500 text-white border-emerald-600';
+            rightIcon = `<span class="ml-auto shrink-0 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold">✓</span>`;
+          } else {
+            optContainerClass = 'bg-slate-50/60 border-slate-200 text-slate-400 opacity-75';
+          }
+        } else if (qs.status === 'wrong') {
+          if (isSelected) {
+            optContainerClass = 'bg-rose-50 border-rose-400 text-rose-950 ring-2 ring-rose-300/50';
+            letterCircleClass = 'bg-rose-500 text-white border-rose-600';
+            rightIcon = `<span class="ml-auto shrink-0 w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center text-xs font-bold">✕</span>`;
+          } else {
+            optContainerClass = 'bg-slate-50/70 border-slate-200 text-slate-500';
+          }
+        } else if (qs.status === 'revealed') {
+          if (isCorrectOption) {
+            optContainerClass = 'bg-emerald-50 border-emerald-500 text-emerald-950 ring-2 ring-emerald-400/40';
+            letterCircleClass = 'bg-emerald-500 text-white border-emerald-600';
+            rightIcon = `<span class="ml-auto shrink-0 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[11px] font-bold">Correcta</span>`;
+          } else if (isSelected) {
+            optContainerClass = 'bg-rose-50/80 border-rose-300 text-rose-900 opacity-85';
+            letterCircleClass = 'bg-rose-400 text-white border-rose-500';
+            rightIcon = `<span class="ml-auto shrink-0 text-xs font-bold text-rose-600">Tu elección</span>`;
+          } else {
+            optContainerClass = 'bg-slate-50/60 border-slate-200 text-slate-400 opacity-75';
+          }
+        } else if (isSelected) {
+          optContainerClass = 'bg-indigo-50/90 border-indigo-500 text-indigo-950 ring-2 ring-indigo-400/40';
+          letterCircleClass = 'bg-indigo-600 text-white border-indigo-700';
+        }
+
+        return `
+          <button
+            type="button"
+            ${isLocked ? 'disabled' : `onclick="selectOption(${ex.id}, '${letter}')"`}
+            class="w-full text-left p-3.5 sm:p-4 rounded-2xl border-2 transition-all flex items-center gap-3 ${optContainerClass} ${isLocked ? 'cursor-default' : 'cursor-pointer active:scale-[0.99]'}"
+          >
+            <span class="w-8 h-8 rounded-xl border font-mono text-sm font-extrabold flex items-center justify-center shrink-0 transition-colors ${letterCircleClass}">
+              ${letter}
+            </span>
+            <span class="font-mono text-sm sm:text-base font-semibold leading-snug break-words">
+              ${formatMath(ex.options[letter])}
+            </span>
+            ${rightIcon}
+          </button>
+        `;
+      }).join('');
+
+      // Zona de acciones y retroalimentación pedagógica
+      let actionZoneHTML = '';
+
+      if (qs.status === 'unanswered') {
+        const canCheck = Boolean(qs.selected);
+        actionZoneHTML = `
+          <div class="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <button
+              type="button"
+              ${canCheck ? `onclick="checkAnswer(${ex.id})"` : 'disabled'}
+              class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-bold text-sm transition-all ${
+                canCheck
+                  ? 'bg-gradient-to-r from-[#6366F1] to-[#7C3AED] hover:opacity-95 text-white shadow-md cursor-pointer active:scale-[0.98]'
+                  : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+              }"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Comprobar mi respuesta</span>
+            </button>
+
+            <button
+              type="button"
+              onclick="revealDirect(${ex.id})"
+              class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-2xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-semibold text-xs sm:text-sm transition-colors cursor-pointer"
+            >
+              <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              <span>Ya lo desarrollé · Ver alternativa correcta</span>
+            </button>
+          </div>
+        `;
+      } else if (qs.status === 'correct') {
+        actionZoneHTML = `
+          <div class="mt-4 rounded-2xl bg-emerald-50 border-2 border-emerald-200 p-4 space-y-2.5 animate-pop">
+            <div class="flex items-center gap-2 text-emerald-800 font-display font-extrabold text-base">
+              <span class="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs">✓</span>
+              <span>¡Excelente! Factorización correcta</span>
+            </div>
+            <div class="rounded-xl bg-white/90 border border-emerald-200/80 p-3.5 text-sm text-slate-700 leading-relaxed">
+              <p class="text-xs font-bold uppercase tracking-wider text-emerald-700 mb-1">Explicación paso a paso</p>
+              <p class="font-medium">${formatMath(ex.explanation)}</p>
+            </div>
+          </div>
+        `;
+      } else if (qs.status === 'wrong') {
+        actionZoneHTML = `
+          <div class="mt-4 rounded-2xl bg-rose-50 border-2 border-rose-200 p-4 space-y-3 animate-pop">
+            <div class="flex items-start gap-2.5 text-rose-800">
+              <span class="w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">!</span>
+              <div>
+                <p class="font-display font-extrabold text-base">¡Casi! Revisa tu desarrollo en el cuaderno</p>
+                <p class="text-xs sm:text-sm text-rose-700 mt-0.5">Verifica los signos, exponentes o si aún queda algún factor que se pueda seguir descomponiendo.</p>
+              </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2.5 pt-1">
+              <button
+                type="button"
+                onclick="retryQuestion(${ex.id})"
+                class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white hover:bg-amber-50 text-indigo-800 border-2 border-indigo-200 font-bold text-xs sm:text-sm transition-all cursor-pointer shadow-xs"
+              >
+                <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9" />
+                </svg>
+                <span>Volver a intentar</span>
+              </button>
+
+              <button
+                type="button"
+                onclick="revealAfterWrong(${ex.id})"
+                class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#10B981] to-[#06B6D4] hover:opacity-95 text-white font-bold text-xs sm:text-sm transition-all cursor-pointer shadow-sm"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Mostrar alternativa correcta y pasos</span>
+              </button>
+            </div>
+          </div>
+        `;
+      } else if (qs.status === 'revealed') {
+        actionZoneHTML = `
+          <div class="mt-4 rounded-2xl bg-indigo-50/80 border-2 border-indigo-200 p-4 space-y-2.5 animate-pop">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2 text-indigo-900 font-display font-extrabold text-base">
+                <span class="px-2.5 py-0.5 rounded-lg bg-emerald-500 text-white font-mono text-sm">Alternativa ${ex.correct}</span>
+                <span>Solución y procedimiento</span>
+              </div>
+              <button
+                type="button"
+                onclick="retryQuestion(${ex.id})"
+                class="text-xs font-bold text-indigo-600 hover:text-indigo-800 underline cursor-pointer"
+              >
+                Limpiar para volver a intentar
+              </button>
+            </div>
+            <div class="rounded-xl bg-white border border-indigo-200/80 p-3.5 text-sm text-slate-700 leading-relaxed">
+              <p class="text-xs font-bold uppercase tracking-wider text-indigo-700 mb-1">Explicación paso a paso</p>
+              <p class="font-medium">${formatMath(ex.explanation)}</p>
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <article
+          id="card-ex-${ex.id}"
+          class="bg-white rounded-3xl border-2 ${cardBorder} p-5 sm:p-6 transition-all animate-pop"
+        >
+          <!-- Cabecera de tarjeta -->
+          <div class="flex flex-wrap items-center justify-between gap-2.5 mb-4">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="font-mono text-sm font-extrabold px-3 py-1 rounded-xl bg-indigo-950 text-white">
+                #${String(ex.id).padStart(2, '0')}
+              </span>
+              ${itemBadge}
+              ${statusBadge}
+            </div>
+
+            <button
+              type="button"
+              onclick="toggleHint(${ex.id})"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                qs.showHint
+                  ? 'bg-amber-400 text-amber-950 shadow-xs'
+                  : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200'
+              }"
+            >
+              <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
+              </svg>
+              <span>${qs.showHint ? 'Ocultar pista' : 'Ver pista de técnica'}</span>
+            </button>
+          </div>
+
+          <!-- Pista desplegable -->
+          ${qs.showHint ? `
+            <div class="mb-4 px-3.5 py-2.5 rounded-2xl bg-amber-50 border border-amber-300/80 text-amber-950 text-xs sm:text-sm font-semibold flex items-center gap-2 animate-pop">
+              <span class="px-2 py-0.5 rounded-md bg-amber-400/50 text-amber-950 font-bold text-xs">Pista</span>
+              <span>Técnica sugerida: <strong>${ex.hint}</strong></span>
+            </div>
+          ` : ''}
+
+          <!-- Expresión algebraica a factorizar -->
+          <div class="rounded-2xl bg-[#FFFDF9] border-2 border-indigo-100/90 px-4 py-5 sm:px-6 sm:py-6 mb-5 text-center">
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Factoriza completamente la expresión</p>
+            <div class="font-mono text-xl sm:text-3xl font-bold text-indigo-950 tracking-tight overflow-x-auto py-1">
+              ${formatMath(ex.expression)}
+            </div>
+          </div>
+
+          <!-- Grid de 4 alternativas -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+            ${optionsHTML}
+          </div>
+
+          <!-- Botones de acción y explicación -->
+          ${actionZoneHTML}
+        </article>
+      `;
+    }
+
+    // Renderizar ejercicios según filtro y modo
+    function renderExercises() {
+      const container = document.getElementById('exercisesContainer');
+      const filtered = getFilteredExercises();
+
+      if (filtered.length === 0) {
+        document.getElementById('focusNavTop').classList.add('hidden');
+        document.getElementById('focusNavBottom').classList.add('hidden');
+
+        container.innerHTML = `
+          <div class="bg-white rounded-3xl border-2 border-indigo-100 p-8 sm:p-12 text-center shadow-sm">
+            <div class="w-16 h-16 rounded-3xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 class="font-display text-xl font-extrabold text-slate-900">¡No tienes ejercicios pendientes en esta sección!</h3>
+            <p class="mt-2 text-sm text-slate-600 max-w-md mx-auto">
+              Aún no has marcado ejercicios para repasar o ya completaste todos los de esta categoría.
+            </p>
+            <button
+              type="button"
+              onclick="setFilter('all')"
+              class="mt-5 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#6366F1] to-[#7C3AED] text-white font-bold text-sm shadow-md cursor-pointer"
+            >
+              Volver a ver todos los ejercicios (40)
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      if (state.mode === 'focus') {
+        if (state.focusIndex >= filtered.length) state.focusIndex = filtered.length - 1;
+        if (state.focusIndex < 0) state.focusIndex = 0;
+
+        const currentEx = filtered[state.focusIndex];
+        container.innerHTML = buildExerciseCardHTML(currentEx);
+
+        document.getElementById('focusNavTop').classList.remove('hidden');
+        document.getElementById('focusNavBottom').classList.remove('hidden');
+        document.getElementById('focusCounterLabel').textContent = `Ejercicio ${state.focusIndex + 1} de ${filtered.length} (N° #${currentEx.id})`;
+
+        const atStart = state.focusIndex === 0;
+        const atEnd = state.focusIndex === filtered.length - 1;
+        document.getElementById('btnPrevTop').disabled = atStart;
+        document.getElementById('btnPrevBottom').disabled = atStart;
+        document.getElementById('btnNextTop').disabled = atEnd;
+        document.getElementById('btnNextBottom').disabled = atEnd;
+      } else {
+        document.getElementById('focusNavTop').classList.add('hidden');
+        document.getElementById('focusNavBottom').classList.add('hidden');
+        container.innerHTML = filtered.map(ex => buildExerciseCardHTML(ex)).join('');
+      }
+    }
+
+    // Renderizado maestro
+    function renderApp() {
+      updateStatsUI();
+      updateFilterTabsUI();
+      updateModeToggleUI();
+      renderExercises();
+      renderQuickNav();
+    }
+
+    // --- ACCIONES INTERACTIVAS DEL ESTUDIANTE ---
+    window.selectOption = function(id, letter) {
+      const qs = state.questions[id];
+      if (!qs || qs.status !== 'unanswered') return;
+      qs.selected = letter;
+      saveProgress();
+      renderApp();
+    };
+
+    window.checkAnswer = function(id) {
+      const ex = EXERCISES.find(e => e.id === id);
+      const qs = state.questions[id];
+      if (!ex || !qs || !qs.selected) return;
+
+      if (qs.selected === ex.correct) {
+        qs.status = 'correct';
+        state.streak += 1;
+        saveProgress();
+        renderApp();
+        const card = document.getElementById(`card-ex-${id}`);
+        if (card) card.classList.add('animate-celebrate');
+      } else {
+        qs.status = 'wrong';
+        state.streak = 0;
+        saveProgress();
+        renderApp();
+      }
+    };
+
+    window.revealDirect = function(id) {
+      const qs = state.questions[id];
+      if (!qs) return;
+      qs.status = 'revealed';
+      saveProgress();
+      renderApp();
+    };
+
+    window.revealAfterWrong = function(id) {
+      const qs = state.questions[id];
+      if (!qs) return;
+      qs.status = 'revealed';
+      saveProgress();
+      renderApp();
+    };
+
+    window.retryQuestion = function(id) {
+      const qs = state.questions[id];
+      if (!qs) return;
+      qs.selected = null;
+      qs.status = 'unanswered';
+      saveProgress();
+      renderApp();
+    };
+
+    window.toggleHint = function(id) {
+      const qs = state.questions[id];
+      if (!qs) return;
+      qs.showHint = !qs.showHint;
+      saveProgress();
+      renderApp();
+    };
+
+    window.setFilter = function(filterName) {
+      state.filter = filterName;
+      state.focusIndex = 0;
+      renderApp();
+    };
+
+    // Mostrar notificación toast temporal
+    function showToast(msg) {
+      const banner = document.getElementById('toastBanner');
+      const text = document.getElementById('toastMessage');
+      text.textContent = msg;
+      banner.classList.remove('opacity-0', 'translate-y-3');
+      banner.classList.add('opacity-100', 'translate-y-0');
+      setTimeout(() => {
+        banner.classList.add('opacity-0', 'translate-y-3');
+        banner.classList.remove('opacity-100', 'translate-y-0');
+      }, 2800);
+    }
+
+    // Descargar copia completa del archivo .html autocontenido
+    function downloadSelfHTML() {
+      try {
+        const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'factorizacion_interactiva_4medio.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('Guía descargada como factorizacion_interactiva_4medio.html');
+      } catch (e) {
+        showToast('No se pudo iniciar la descarga en este navegador.');
+      }
+    }
+
+    // --- INICIALIZACIÓN Y EVENTOS ---
+    document.addEventListener('DOMContentLoaded', () => {
+      loadProgress();
+      renderApp();
+
+      // Pestañas de filtro
+      document.querySelectorAll('.filter-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          setFilter(btn.getAttribute('data-filter'));
+        });
+      });
+
+      // Selector de modo Vista Completa vs Modo Enfoque
+      document.getElementById('btnModeList').addEventListener('click', () => {
+        state.mode = 'list';
+        renderApp();
+      });
+
+      document.getElementById('btnModeFocus').addEventListener('click', () => {
+        state.mode = 'focus';
+        state.focusIndex = 0;
+        renderApp();
+      });
+
+      // Botones Anterior / Siguiente en Modo Enfoque
+      const goPrev = () => {
+        if (state.focusIndex > 0) {
+          state.focusIndex--;
+          renderApp();
+          document.getElementById('focusNavTop').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      };
+
+      const goNext = () => {
+        const filtered = getFilteredExercises();
+        if (state.focusIndex < filtered.length - 1) {
+          state.focusIndex++;
+          renderApp();
+          document.getElementById('focusNavTop').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      };
+
+      document.getElementById('btnPrevTop').addEventListener('click', goPrev);
+      document.getElementById('btnPrevBottom').addEventListener('click', goPrev);
+      document.getElementById('btnNextTop').addEventListener('click', goNext);
+      document.getElementById('btnNextBottom').addEventListener('click', goNext);
+
+      // Navegación por teclado en Modo Enfoque
+      document.addEventListener('keydown', (e) => {
+        if (state.mode !== 'focus') return;
+        const modalOpen = !document.getElementById('resetModal').classList.contains('hidden');
+        if (modalOpen) return;
+        if (e.key === 'ArrowLeft') goPrev();
+        if (e.key === 'ArrowRight') goNext();
+      });
+
+      // Descargar archivo HTML
+      document.getElementById('btnDownloadHtml').addEventListener('click', downloadSelfHTML);
+
+      // Modal de reinicio de progreso
+      const resetModal = document.getElementById('resetModal');
+      document.getElementById('btnOpenReset').addEventListener('click', () => {
+        resetModal.classList.remove('hidden');
+        resetModal.classList.add('flex');
+      });
+
+      const closeResetModal = () => {
+        resetModal.classList.add('hidden');
+        resetModal.classList.remove('flex');
+      };
+
+      document.getElementById('btnCancelReset').addEventListener('click', closeResetModal);
+      resetModal.addEventListener('click', (e) => {
+        if (e.target === resetModal) closeResetModal();
+      });
+
+      document.getElementById('btnConfirmReset').addEventListener('click', () => {
+        state.streak = 0;
+        state.focusIndex = 0;
+        state.filter = 'all';
+        state.questions = initDefaultQuestions();
+        saveProgress();
+        closeResetModal();
+        renderApp();
+        showToast('Progreso reiniciado correctamente');
+      });
+    });
+  </script>
+</body>
+</html>
